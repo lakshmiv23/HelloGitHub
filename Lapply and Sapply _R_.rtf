@@ -1,0 +1,904 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\colortbl ;\red0\green0\blue255;}
+{\*\generator Riched20 10.0.14393}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang9 R _ Programm -Lapply and sapply                John Hopkins University      Venkata L Vaka\par
+\par
+Assignment  Lapply and Sapply\par
+Please choose a course, or type 0 to exit swirl.\par
+1: R Programming\par
+2: Take me to the swirl course repository!\par
+Selection: 1\par
+| Please choose a lesson, or type 0 to return to course menu.\par
+ 1: Basic Building Blocks      2: Workspace and Files     \par
+ 3: Sequences of Numbers       4: Vectors                 \par
+ 5: Missing Values             6: Subsetting Vectors      \par
+ 7: Matrices and Data Frames   8: Logic                   \par
+ 9: Functions                 10: lapply and sapply       \par
+11: vapply and tapply         12: Looking at Data         \par
+13: Simulation                14: Dates and Times         \par
+15: Base Graphics             \par
+Selection: 10\par
+  |                                                          |   0%\par
+| In this lesson, you'll learn how to use lapply() and sapply(),\par
+| the two most important members of R's *apply family of functions,\par
+| also known as loop functions.\par
+...\par
+  |=                                                         |   2%\par
+| These powerful functions, along with their close relatives\par
+| (vapply() and tapply(), among others) offer a concise and\par
+| convenient means of implementing the Split-Apply-Combine strategy\par
+| for data analysis.\par
+...\par
+  |==                                                        |   4%\par
+| Each of the *apply functions will SPLIT up some data into smaller\par
+| pieces, APPLY a function to each piece, then COMBINE the results.\par
+| A more detailed discussion of this strategy is found in Hadley\par
+| Wickham's Journal of Statistical Software paper titled 'The\par
+| Split-Apply-Combine Strategy for Data Analysis'.\par
+...\par
+  |===                                                       |   6%\par
+| Throughout this lesson, we'll use the Flags dataset from the UCI\par
+| Machine Learning Repository. This dataset contains details of\par
+| various nations and their flags. More information may be found\par
+| here: {{\field{\*\fldinst{HYPERLINK http://archive.ics.uci.edu/ml/datasets/Flags }}{\fldrslt{http://archive.ics.uci.edu/ml/datasets/Flags\ul0\cf0}}}}\f0\fs22\par
+...\par
+  |=====                                                     |   8%\par
+| Let's jump right in so you can get a feel for how these special\par
+| functions work!\par
+...\par
+  |======                                                    |  10%\par
+| I've stored the dataset in a variable called flags. Type\par
+| head(flags) to preview the first six lines (i.e. the 'head') of\par
+| the dataset.\par
+> \par
+> head(flags)\par
+            name landmass zone area population language religion\par
+1    Afghanistan        5    1  648         16       10        2\par
+2        Albania        3    1   29          3        6        6\par
+3        Algeria        4    1 2388         20        8        2\par
+4 American-Samoa        6    3    0          0        1        1\par
+5        Andorra        3    1    0          0        6        0\par
+6         Angola        4    2 1247          7       10        5\par
+  bars stripes colours red green blue gold white black orange\par
+1    0       3       5   1     1    0    1     1     1      0\par
+2    0       0       3   1     0    0    1     0     1      0\par
+3    2       0       3   1     1    0    0     1     0      0\par
+4    0       0       5   1     0    1    1     1     0      1\par
+5    3       0       3   1     0    1    1     0     0      0\par
+6    0       2       3   1     0    0    1     0     1      0\par
+  mainhue circles crosses saltires quarters sunstars crescent\par
+1   green       0       0        0        0        1        0\par
+2     red       0       0        0        0        1        0\par
+3   green       0       0        0        0        1        1\par
+4    blue       0       0        0        0        0        0\par
+5    gold       0       0        0        0        0        0\par
+6     red       0       0        0        0        1        0\par
+  triangle icon animate text topleft botright\par
+1        0    1       0    0   black    green\par
+2        0    0       1    0     red      red\par
+3        0    0       0    0   green    white\par
+4        1    1       1    0    blue      red\par
+5        0    0       0    0    blue      red\par
+6        0    1       0    0     red    black\par
+| You're the best!\par
+  |=======                                                   |  12%\par
+| You may need to scroll up to see all of the output. Now, let's\par
+| check out the dimensions of the dataset using dim(flags).\par
+> dim(flags)\par
+[1] 194  30\par
+| All that hard work is paying off!\par
+  |========                                                  |  14%\par
+| This tells us that there are 194 rows, or observations, and 30\par
+| columns, or variables. Each observation is a country and each\par
+| variable describes some characteristic of that country or its\par
+| flag. To open a more complete description of the dataset in a\par
+| separate text file, type viewinfo() when you are back at the\par
+| prompt (>).\par
+...\par
+  |=========                                                 |  16%\par
+| As with any dataset, we'd like to know in what format the\par
+| variables have been stored. In other words, what is the 'class'\par
+| of each variable? What happens if we do class(flags)? Try it out.\par
+> class(flags)\par
+[1] "data.frame"\par
+| All that hard work is paying off!\par
+  |==========                                                |  18%\par
+| That just tells us that the entire dataset is stored as a\par
+| 'data.frame', which doesn't answer our question. What we really\par
+| need is to call the class() function on each individual column.\par
+| While we could do this manually (i.e. one column at a time) it's\par
+| much faster if we can automate the process. Sounds like a loop!\par
+...\par
+  |============                                              |  20%\par
+| The lapply() function takes a list as input, applies a function\par
+| to each element of the list, then returns a list of the same\par
+| length as the original one. Since a data frame is really just a\par
+| list of vectors (you can see this with as.list(flags)), we can\par
+| use lapply() to apply the class() function to each column of the\par
+| flags dataset. Let's see it in action!\par
+...\par
+  |=============                                             |  22%\par
+| Type cls_list <- lapply(flags, class) to apply the class()\par
+| function to each column of the flags dataset and store the result\par
+| in a variable called cls_list. Note that you just supply the name\par
+| of the function you want to apply (i.e. class), without the usual\par
+| parentheses after it.\par
+> cls_list <- lapply(flags, class)\par
+| You got it right!\par
+  |==============                                            |  24%\par
+| Type cls_list to view the result.\par
+> cls_list\par
+$name\par
+[1] "factor"\par
+$landmass\par
+[1] "integer"\par
+$zone\par
+[1] "integer"\par
+$area\par
+[1] "integer"\par
+$population\par
+[1] "integer"\par
+$language\par
+[1] "integer"\par
+$religion\par
+[1] "integer"\par
+$bars\par
+[1] "integer"\par
+$stripes\par
+[1] "integer"\par
+$colours\par
+[1] "integer"\par
+$red\par
+[1] "integer"\par
+$green\par
+[1] "integer"\par
+$blue\par
+[1] "integer"\par
+$gold\par
+[1] "integer"\par
+$white\par
+[1] "integer"\par
+$black\par
+[1] "integer"\par
+$orange\par
+[1] "integer"\par
+$mainhue\par
+[1] "factor"\par
+$circles\par
+[1] "integer"\par
+$crosses\par
+[1] "integer"\par
+$saltires\par
+[1] "integer"\par
+$quarters\par
+[1] "integer"\par
+$sunstars\par
+[1] "integer"\par
+$crescent\par
+[1] "integer"\par
+$triangle\par
+[1] "integer"\par
+$icon\par
+[1] "integer"\par
+$animate\par
+[1] "integer"\par
+$text\par
+[1] "integer"\par
+$topleft\par
+[1] "factor"\par
+$botright\par
+[1] "factor"\par
+| That's a job well done!\par
+  |===============                                           |  26%\par
+| The 'l' in 'lapply' stands for 'list'. Type class(cls_list) to\par
+| confirm that lapply() returned a list.\par
+> class(cls_list)\par
+[1] "list"\par
+| Great job!\par
+  |================                                          |  28%\par
+| As expected, we got a list of length 30 -- one element for each\par
+| variable/column. The output would be considerably more compact if\par
+| we could represent it as a vector instead of a list.\par
+...\par
+  |=================                                         |  30%\par
+| You may remember from a previous lesson that lists are most\par
+| helpful for storing multiple classes of data. In this case, since\par
+| every element of the list returned by lapply() is a character\par
+| vector of length one (i.e. "integer" and "vector"), cls_list can\par
+| be simplified to a character vector. To do this manually, type\par
+| as.character(cls_list).\par
+> as.character(cls_list)\par
+ [1] "factor"  "integer" "integer" "integer" "integer" "integer"\par
+ [7] "integer" "integer" "integer" "integer" "integer" "integer"\par
+[13] "integer" "integer" "integer" "integer" "integer" "factor" \par
+[19] "integer" "integer" "integer" "integer" "integer" "integer"\par
+[25] "integer" "integer" "integer" "integer" "factor"  "factor" \par
+| Keep up the great work!\par
+  |===================                                       |  32%\par
+| sapply() allows you to automate this process by calling lapply()\par
+| behind the scenes, but then attempting to simplify (hence the 's'\par
+| in 'sapply') the result for you. Use sapply() the same way you\par
+| used lapply() to get the class of each column of the flags\par
+| dataset and store the result in cls_vect. If you need help, type\par
+| ?sapply to bring up the documentation.\par
+> cls_vect <- sapply(flags, class)\par
+| You nailed it! Good job!\par
+  |====================                                      |  34%\par
+| Use class(cls_vect) to confirm that sapply() simplified the\par
+| result to a character vector.\par
+> class(cls_vect)\par
+[1] "character"\par
+| You are amazing!\par
+  |=====================                                     |  36%\par
+| In general, if the result is a list where every element is of\par
+| length one, then sapply() returns a vector. If the result is a\par
+| list where every element is a vector of the same length (> 1),\par
+| sapply() returns a matrix. If sapply() can't figure things out,\par
+| then it just returns a list, no different from what lapply()\par
+| would give you.\par
+...\par
+  |======================                                    |  38%\par
+| Let's practice using lapply() and sapply() some more!\par
+...\par
+  |=======================                                   |  40%\par
+| Columns 11 through 17 of our dataset are indicator variables,\par
+| each representing a different color. The value of the indicator\par
+| variable is 1 if the color is present in a country's flag and 0\par
+| otherwise.\par
+...\par
+  |========================                                  |  42%\par
+| Therefore, if we want to know the total number of countries (in\par
+| our dataset) with, for example, the color orange on their flag,\par
+| we can just add up all of the 1s and 0s in the 'orange' column.\par
+| Try sum(flags$orange) to see this.\par
+> sum(flags$orange)\par
+[1] 26\par
+| You are quite good my friend!\par
+  |==========================                                |  44%\par
+| Now we want to repeat this operation for each of the colors\par
+| recorded in the dataset.\par
+...\par
+  |===========================                               |  46%\par
+| First, use flag_colors <- flags[, 11:17] to extract the columns\par
+| containing the color data and store them in a new data frame\par
+| called flag_colors. (Note the comma before 11:17. This subsetting\par
+| command tells R that we want all rows, but only columns 11\par
+| through 17.)\par
+> flag_colors <- flags[, 11:17]\par
+| You're the best!\par
+  |============================                              |  48%\par
+| Use the head() function to look at the first 6 lines of\par
+| flag_colors.\par
+> head(flag_colors)\par
+  red green blue gold white black orange\par
+1   1     1    0    1     1     1      0\par
+2   1     0    0    1     0     1      0\par
+3   1     1    0    0     1     0      0\par
+4   1     0    1    1     1     0      1\par
+5   1     0    1    1     0     0      0\par
+6   1     0    0    1     0     1      0\par
+| You got it right!\par
+  |=============================                             |  50%\par
+| To get a list containing the sum of each column of flag_colors,\par
+| call the lapply() function with two arguments. The first argument\par
+| is the object over which we are looping (i.e. flag_colors) and\par
+| the second argument is the name of the function we wish to apply\par
+| to each column (i.e. sum). Remember that the second argument is\par
+| just the name of the function with no parentheses, etc.\par
+> lapply(flag_colors,sum)\par
+$red\par
+[1] 153\par
+$green\par
+[1] 91\par
+$blue\par
+[1] 99\par
+$gold\par
+[1] 91\par
+$white\par
+[1] 146\par
+$black\par
+[1] 52\par
+$orange\par
+[1] 26\par
+| You are doing so well!\par
+  |==============================                            |  52%\par
+| This tells us that of the 194 flags in our dataset, 153 contain\par
+| the color red, 91 contain green, 99 contain blue, and so on.\par
+...\par
+  |===============================                           |  54%\par
+| The result is a list, since lapply() always returns a list. Each\par
+| element of this list is of length one, so the result can be\par
+| simplified to a vector by calling sapply() instead of lapply().\par
+| Try it now.\par
+> sapply(flag_colors,sum)\par
+   red  green   blue   gold  white  black orange \par
+   153     91     99     91    146     52     26 \par
+| You're the best!\par
+  |================================                          |  56%\par
+| Perhaps it's more informative to find the proportion of flags\par
+| (out of 194) containing each color. Since each column is just a\par
+| bunch of 1s and 0s, the arithmetic mean of each column will give\par
+| us the proportion of 1s. (If it's not clear why, think of a\par
+| simpler situation where you have three 1s and two 0s -- (1 + 1 +\par
+| 1 + 0 + 0)/5 = 3/5 = 0.6).\par
+...\par
+  |==================================                        |  58%\par
+| Use sapply() to apply the mean() function to each column of\par
+| flag_colors. Remember that the second argument to sapply() should\par
+| just specify the name of the function (i.e. mean) that you want\par
+| to apply.\par
+> sapply(flag_colors,mean)\par
+      red     green      blue      gold     white     black \par
+0.7886598 0.4690722 0.5103093 0.4690722 0.7525773 0.2680412 \par
+   orange \par
+0.1340206 \par
+| All that practice is paying off!\par
+  |===================================                       |  60%\par
+| In the examples we've looked at so far, sapply() has been able to\par
+| simplify the result to vector. That's because each element of the\par
+| list returned by lapply() was a vector of length one. Recall that\par
+| sapply() instead returns a matrix when each element of the list\par
+| returned by lapply() is a vector of the same length (> 1).\par
+...\par
+  |====================================                      |  62%\par
+| To illustrate this, let's extract columns 19 through 23 from the\par
+| flags dataset and store the result in a new data frame called\par
+| flag_shapes. flag_shapes <- flags[, 19:23] will do it.\par
+> flag_shapes <- flags[, 19:23]\par
+| Excellent job!\par
+  |=====================================                     |  64%\par
+| Each of these columns (i.e. variables) represents the number of\par
+| times a particular shape or design appears on a country's flag.\par
+| We are interested in the minimum and maximum number of times each\par
+| shape or design appears.\par
+...\par
+  |======================================                    |  66%\par
+| The range() function returns the minimum and maximum of its first\par
+| argument, which should be a numeric vector. Use lapply() to apply\par
+| the range function to each column of flag_shapes. Don't worry\par
+| about storing the result in a new variable. By now, we know that\par
+| lapply() always returns a list.\par
+> lapply(flag_shapes,range)\par
+$circles\par
+[1] 0 4\par
+$crosses\par
+[1] 0 2\par
+$saltires\par
+[1] 0 1\par
+$quarters\par
+[1] 0 4\par
+$sunstars\par
+[1]  0 50\par
+| Excellent work!\par
+  |=======================================                   |  68%\par
+| Do the same operation, but using sapply() and store the result in\par
+| a variable called shape_mat.\par
+> shape_mat <- sapply(flag_shapes, range)\par
+| That's the answer I was looking for.\par
+  |=========================================                 |  70%\par
+| View the contents of shape_mat.\par
+> \par
+> shape_mat\par
+     circles crosses saltires quarters sunstars\par
+[1,]       0       0        0        0        0\par
+[2,]       4       2        1        4       50\par
+| You're the best!\par
+  |==========================================                |  72%\par
+| Each column of shape_mat gives the minimum (row 1) and maximum\par
+| (row 2) number of times its respective shape appears in different\par
+| flags.\par
+...\par
+  |===========================================               |  74%\par
+| Use the class() function to confirm that shape_mat is a matrix.\par
+> class(shape_mat)\par
+[1] "matrix"\par
+| You nailed it! Good job!\par
+  |============================================              |  76%\par
+| As we've seen, sapply() always attempts to simplify the result\par
+| given by lapply(). It has been successful in doing so for each of\par
+| the examples we've looked at so far. Let's look at an example\par
+| where sapply() can't figure out how to simplify the result and\par
+| thus returns a list, no different from lapply().\par
+...\par
+  |=============================================             |  78%\par
+| When given a vector, the unique() function returns a vector with\par
+| all duplicate elements removed. In other words, unique() returns\par
+| a vector of only the 'unique' elements. To see how it works, try\par
+| unique(c(3, 4, 5, 5, 5, 6, 6)).\par
+> unique(c(3, 4, 5, 5, 5, 6, 6))\par
+[1] 3 4 5 6\par
+| Perseverance, that's the answer.\par
+  |==============================================            |  80%\par
+| We want to know the unique values for each variable in the flags\par
+| dataset. To accomplish this, use lapply() to apply the unique()\par
+| function to each column in the flags dataset, storing the result\par
+| in a variable called unique_vals.\par
+> unique_vals<-lapply(flags,unique)\par
+| Excellent work!\par
+  |================================================          |  82%\par
+| Print the value of unique_vals to the console.\par
+> unique_vals\par
+$name\par
+  [1] Afghanistan              Albania                 \par
+  [3] Algeria                  American-Samoa          \par
+  [5] Andorra                  Angola                  \par
+  [7] Anguilla                 Antigua-Barbuda         \par
+  [9] Argentina                Argentine               \par
+ [11] Australia                Austria                 \par
+ [13] Bahamas                  Bahrain                 \par
+ [15] Bangladesh               Barbados                \par
+ [17] Belgium                  Belize                  \par
+ [19] Benin                    Bermuda                 \par
+ [21] Bhutan                   Bolivia                 \par
+ [23] Botswana                 Brazil                  \par
+ [25] British-Virgin-Isles     Brunei                  \par
+ [27] Bulgaria                 Burkina                 \par
+ [29] Burma                    Burundi                 \par
+ [31] Cameroon                 Canada                  \par
+ [33] Cape-Verde-Islands       Cayman-Islands          \par
+ [35] Central-African-Republic Chad                    \par
+ [37] Chile                    China                   \par
+ [39] Colombia                 Comorro-Islands         \par
+ [41] Congo                    Cook-Islands            \par
+ [43] Costa-Rica               Cuba                    \par
+ [45] Cyprus                   Czechoslovakia          \par
+ [47] Denmark                  Djibouti                \par
+ [49] Dominica                 Dominican-Republic      \par
+ [51] Ecuador                  Egypt                   \par
+ [53] El-Salvador              Equatorial-Guinea       \par
+ [55] Ethiopia                 Faeroes                 \par
+ [57] Falklands-Malvinas       Fiji                    \par
+ [59] Finland                  France                  \par
+ [61] French-Guiana            French-Polynesia        \par
+ [63] Gabon                    Gambia                  \par
+ [65] Germany-DDR              Germany-FRG             \par
+ [67] Ghana                    Gibraltar               \par
+ [69] Greece                   Greenland               \par
+ [71] Grenada                  Guam                    \par
+ [73] Guatemala                Guinea                  \par
+ [75] Guinea-Bissau            Guyana                  \par
+ [77] Haiti                    Honduras                \par
+ [79] Hong-Kong                Hungary                 \par
+ [81] Iceland                  India                   \par
+ [83] Indonesia                Iran                    \par
+ [85] Iraq                     Ireland                 \par
+ [87] Israel                   Italy                   \par
+ [89] Ivory-Coast              Jamaica                 \par
+ [91] Japan                    Jordan                  \par
+ [93] Kampuchea                Kenya                   \par
+ [95] Kiribati                 Kuwait                  \par
+ [97] Laos                     Lebanon                 \par
+ [99] Lesotho                  Liberia                 \par
+[101] Libya                    Liechtenstein           \par
+[103] Luxembourg               Malagasy                \par
+[105] Malawi                   Malaysia                \par
+[107] Maldive-Islands          Mali                    \par
+[109] Malta                    Marianas                \par
+[111] Mauritania               Mauritius               \par
+[113] Mexico                   Micronesia              \par
+[115] Monaco                   Mongolia                \par
+[117] Montserrat               Morocco                 \par
+[119] Mozambique               Nauru                   \par
+[121] Nepal                    Netherlands             \par
+[123] Netherlands-Antilles     New-Zealand             \par
+[125] Nicaragua                Niger                   \par
+[127] Nigeria                  Niue                    \par
+[129] North-Korea              North-Yemen             \par
+[131] Norway                   Oman                    \par
+[133] Pakistan                 Panama                  \par
+[135] Papua-New-Guinea         Parguay                 \par
+[137] Peru                     Philippines             \par
+[139] Poland                   Portugal                \par
+[141] Puerto-Rico              Qatar                   \par
+[143] Romania                  Rwanda                  \par
+[145] San-Marino               Sao-Tome                \par
+[147] Saudi-Arabia             Senegal                 \par
+[149] Seychelles               Sierra-Leone            \par
+[151] Singapore                Soloman-Islands         \par
+[153] Somalia                  South-Africa            \par
+[155] South-Korea              South-Yemen             \par
+[157] Spain                    Sri-Lanka               \par
+[159] St-Helena                St-Kitts-Nevis          \par
+[161] St-Lucia                 St-Vincent              \par
+[163] Sudan                    Surinam                 \par
+[165] Swaziland                Sweden                  \par
+[167] Switzerland              Syria                   \par
+[169] Taiwan                   Tanzania                \par
+[171] Thailand                 Togo                    \par
+[173] Tonga                    Trinidad-Tobago         \par
+[175] Tunisia                  Turkey                  \par
+[177] Turks-Cocos-Islands      Tuvalu                  \par
+[179] UAE                      Uganda                  \par
+[181] UK                       Uruguay                 \par
+[183] US-Virgin-Isles          USA                     \par
+[185] USSR                     Vanuatu                 \par
+[187] Vatican-City             Venezuela               \par
+[189] Vietnam                  Western-Samoa           \par
+[191] Yugoslavia               Zaire                   \par
+[193] Zambia                   Zimbabwe                \par
+194 Levels: Afghanistan Albania Algeria American-Samoa ... Zimbabwe\par
+$landmass\par
+[1] 5 3 4 6 1 2\par
+$zone\par
+[1] 1 3 2 4\par
+$area\par
+  [1]   648    29  2388     0  1247  2777  7690    84    19     1\par
+ [11]   143    31    23   113    47  1099   600  8512     6   111\par
+ [21]   274   678    28   474  9976     4   623  1284   757  9561\par
+ [31]  1139     2   342    51   115     9   128    43    22    49\par
+ [41]   284  1001    21  1222    12    18   337   547    91   268\par
+ [51]    10   108   249   239   132  2176   109   246    36   215\par
+ [61]   112    93   103  3268  1904  1648   435    70   301   323\par
+ [71]    11   372    98   181   583   236    30  1760     3   587\par
+ [81]   118   333  1240  1031  1973  1566   447   783   140    41\par
+ [91]  1267   925   121   195   324   212   804    76   463   407\par
+[101]  1285   300   313    92   237    26  2150   196    72   637\par
+[111]  1221    99   288   505    66  2506    63    17   450   185\par
+[121]   945   514    57     5   164   781   245   178  9363 22402\par
+[131]    15   912   256   905   753   391\par
+$population\par
+ [1]   16    3   20    0    7   28   15    8   90   10    1    6\par
+[13]  119    9   35    4   24    2   11 1008    5   47   31   54\par
+[25]   17   61   14  684  157   39   57  118   13   77   12   56\par
+[37]   18   84   48   36   22   29   38   49   45  231  274   60\par
+$language\par
+ [1] 10  6  8  1  2  4  3  5  7  9\par
+$religion\par
+[1] 2 6 1 0 5 3 4 7\par
+$bars\par
+[1] 0 2 3 1 5\par
+$stripes\par
+ [1]  3  0  2  1  5  9 11 14  4  6 13  7\par
+$colours\par
+[1] 5 3 2 8 6 4 7 1\par
+$red\par
+[1] 1 0\par
+$green\par
+[1] 1 0\par
+$blue\par
+[1] 0 1\par
+$gold\par
+[1] 1 0\par
+$white\par
+[1] 1 0\par
+$black\par
+[1] 1 0\par
+$orange\par
+[1] 0 1\par
+$mainhue\par
+[1] green  red    blue   gold   white  orange black  brown \par
+Levels: black blue brown gold green orange red white\par
+$circles\par
+[1] 0 1 4 2\par
+$crosses\par
+[1] 0 1 2\par
+$saltires\par
+[1] 0 1\par
+$quarters\par
+[1] 0 1 4\par
+$sunstars\par
+ [1]  1  0  6 22 14  3  4  5 15 10  7  2  9 50\par
+$crescent\par
+[1] 0 1\par
+$triangle\par
+[1] 0 1\par
+$icon\par
+[1] 1 0\par
+$animate\par
+[1] 0 1\par
+$text\par
+[1] 0 1\par
+$topleft\par
+[1] black  red    green  blue   white  orange gold  \par
+Levels: black blue gold green orange red white\par
+$botright\par
+[1] green  red    white  black  blue   gold   orange brown \par
+Levels: black blue brown gold green orange red white\par
+| Perseverance, that's the answer.\par
+  |=================================================         |  84%\par
+| Since unique_vals is a list, you can use what you've learned to\par
+| determine the length of each element of unique_vals (i.e. the\par
+| number of unique values for each variable). Simplify the result,\par
+| if possible. Hint: Apply the length() function to each element of\par
+| unique_vals.\par
+> sapply(unique_vals,length)\par
+      name   landmass       zone       area population   language \par
+       194          6          4        136         48         10 \par
+  religion       bars    stripes    colours        red      green \par
+         8          5         12          8          2          2 \par
+      blue       gold      white      black     orange    mainhue \par
+         2          2          2          2          2          8 \par
+   circles    crosses   saltires   quarters   sunstars   crescent \par
+         4          3          2          3         14          2 \par
+  triangle       icon    animate       text    topleft   botright \par
+         2          2          2          2          7          8 \par
+| All that hard work is paying off!\par
+  |==================================================        |  86%\par
+| The fact that the elements of the unique_vals list are all\par
+| vectors of *different* length poses a problem for sapply(), since\par
+| there's no obvious way of simplifying the result.\par
+...\par
+  |===================================================       |  88%\par
+| Use sapply() to apply the unique() function to each column of the\par
+| flags dataset to see that you get the same unsimplified list that\par
+| you got from lapply().\par
+> sapply(flags,unique)\par
+$name\par
+  [1] Afghanistan              Albania                 \par
+  [3] Algeria                  American-Samoa          \par
+  [5] Andorra                  Angola                  \par
+  [7] Anguilla                 Antigua-Barbuda         \par
+  [9] Argentina                Argentine               \par
+ [11] Australia                Austria                 \par
+ [13] Bahamas                  Bahrain                 \par
+ [15] Bangladesh               Barbados                \par
+ [17] Belgium                  Belize                  \par
+ [19] Benin                    Bermuda                 \par
+ [21] Bhutan                   Bolivia                 \par
+ [23] Botswana                 Brazil                  \par
+ [25] British-Virgin-Isles     Brunei                  \par
+ [27] Bulgaria                 Burkina                 \par
+ [29] Burma                    Burundi                 \par
+ [31] Cameroon                 Canada                  \par
+ [33] Cape-Verde-Islands       Cayman-Islands          \par
+ [35] Central-African-Republic Chad                    \par
+ [37] Chile                    China                   \par
+ [39] Colombia                 Comorro-Islands         \par
+ [41] Congo                    Cook-Islands            \par
+ [43] Costa-Rica               Cuba                    \par
+ [45] Cyprus                   Czechoslovakia          \par
+ [47] Denmark                  Djibouti                \par
+ [49] Dominica                 Dominican-Republic      \par
+ [51] Ecuador                  Egypt                   \par
+ [53] El-Salvador              Equatorial-Guinea       \par
+ [55] Ethiopia                 Faeroes                 \par
+ [57] Falklands-Malvinas       Fiji                    \par
+ [59] Finland                  France                  \par
+ [61] French-Guiana            French-Polynesia        \par
+ [63] Gabon                    Gambia                  \par
+ [65] Germany-DDR              Germany-FRG             \par
+ [67] Ghana                    Gibraltar               \par
+ [69] Greece                   Greenland               \par
+ [71] Grenada                  Guam                    \par
+ [73] Guatemala                Guinea                  \par
+ [75] Guinea-Bissau            Guyana                  \par
+ [77] Haiti                    Honduras                \par
+ [79] Hong-Kong                Hungary                 \par
+ [81] Iceland                  India                   \par
+ [83] Indonesia                Iran                    \par
+ [85] Iraq                     Ireland                 \par
+ [87] Israel                   Italy                   \par
+ [89] Ivory-Coast              Jamaica                 \par
+ [91] Japan                    Jordan                  \par
+ [93] Kampuchea                Kenya                   \par
+ [95] Kiribati                 Kuwait                  \par
+ [97] Laos                     Lebanon                 \par
+ [99] Lesotho                  Liberia                 \par
+[101] Libya                    Liechtenstein           \par
+[103] Luxembourg               Malagasy                \par
+[105] Malawi                   Malaysia                \par
+[107] Maldive-Islands          Mali                    \par
+[109] Malta                    Marianas                \par
+[111] Mauritania               Mauritius               \par
+[113] Mexico                   Micronesia              \par
+[115] Monaco                   Mongolia                \par
+[117] Montserrat               Morocco                 \par
+[119] Mozambique               Nauru                   \par
+[121] Nepal                    Netherlands             \par
+[123] Netherlands-Antilles     New-Zealand             \par
+[125] Nicaragua                Niger                   \par
+[127] Nigeria                  Niue                    \par
+[129] North-Korea              North-Yemen             \par
+[131] Norway                   Oman                    \par
+[133] Pakistan                 Panama                  \par
+[135] Papua-New-Guinea         Parguay                 \par
+[137] Peru                     Philippines             \par
+[139] Poland                   Portugal                \par
+[141] Puerto-Rico              Qatar                   \par
+[143] Romania                  Rwanda                  \par
+[145] San-Marino               Sao-Tome                \par
+[147] Saudi-Arabia             Senegal                 \par
+[149] Seychelles               Sierra-Leone            \par
+[151] Singapore                Soloman-Islands         \par
+[153] Somalia                  South-Africa            \par
+[155] South-Korea              South-Yemen             \par
+[157] Spain                    Sri-Lanka               \par
+[159] St-Helena                St-Kitts-Nevis          \par
+[161] St-Lucia                 St-Vincent              \par
+[163] Sudan                    Surinam                 \par
+[165] Swaziland                Sweden                  \par
+[167] Switzerland              Syria                   \par
+[169] Taiwan                   Tanzania                \par
+[171] Thailand                 Togo                    \par
+[173] Tonga                    Trinidad-Tobago         \par
+[175] Tunisia                  Turkey                  \par
+[177] Turks-Cocos-Islands      Tuvalu                  \par
+[179] UAE                      Uganda                  \par
+[181] UK                       Uruguay                 \par
+[183] US-Virgin-Isles          USA                     \par
+[185] USSR                     Vanuatu                 \par
+[187] Vatican-City             Venezuela               \par
+[189] Vietnam                  Western-Samoa           \par
+[191] Yugoslavia               Zaire                   \par
+[193] Zambia                   Zimbabwe                \par
+194 Levels: Afghanistan Albania Algeria American-Samoa ... Zimbabwe\par
+$landmass\par
+[1] 5 3 4 6 1 2\par
+$zone\par
+[1] 1 3 2 4\par
+$area\par
+  [1]   648    29  2388     0  1247  2777  7690    84    19     1\par
+ [11]   143    31    23   113    47  1099   600  8512     6   111\par
+ [21]   274   678    28   474  9976     4   623  1284   757  9561\par
+ [31]  1139     2   342    51   115     9   128    43    22    49\par
+ [41]   284  1001    21  1222    12    18   337   547    91   268\par
+ [51]    10   108   249   239   132  2176   109   246    36   215\par
+ [61]   112    93   103  3268  1904  1648   435    70   301   323\par
+ [71]    11   372    98   181   583   236    30  1760     3   587\par
+ [81]   118   333  1240  1031  1973  1566   447   783   140    41\par
+ [91]  1267   925   121   195   324   212   804    76   463   407\par
+[101]  1285   300   313    92   237    26  2150   196    72   637\par
+[111]  1221    99   288   505    66  2506    63    17   450   185\par
+[121]   945   514    57     5   164   781   245   178  9363 22402\par
+[131]    15   912   256   905   753   391\par
+$population\par
+ [1]   16    3   20    0    7   28   15    8   90   10    1    6\par
+[13]  119    9   35    4   24    2   11 1008    5   47   31   54\par
+[25]   17   61   14  684  157   39   57  118   13   77   12   56\par
+[37]   18   84   48   36   22   29   38   49   45  231  274   60\par
+$language\par
+ [1] 10  6  8  1  2  4  3  5  7  9\par
+$religion\par
+[1] 2 6 1 0 5 3 4 7\par
+$bars\par
+[1] 0 2 3 1 5\par
+$stripes\par
+ [1]  3  0  2  1  5  9 11 14  4  6 13  7\par
+$colours\par
+[1] 5 3 2 8 6 4 7 1\par
+$red\par
+[1] 1 0\par
+$green\par
+[1] 1 0\par
+$blue\par
+[1] 0 1\par
+$gold\par
+[1] 1 0\par
+$white\par
+[1] 1 0\par
+$black\par
+[1] 1 0\par
+$orange\par
+[1] 0 1\par
+$mainhue\par
+[1] green  red    blue   gold   white  orange black  brown \par
+Levels: black blue brown gold green orange red white\par
+$circles\par
+[1] 0 1 4 2\par
+$crosses\par
+[1] 0 1 2\par
+$saltires\par
+[1] 0 1\par
+$quarters\par
+[1] 0 1 4\par
+$sunstars\par
+ [1]  1  0  6 22 14  3  4  5 15 10  7  2  9 50\par
+$crescent\par
+[1] 0 1\par
+$triangle\par
+[1] 0 1\par
+$icon\par
+[1] 1 0\par
+$animate\par
+[1] 0 1\par
+$text\par
+[1] 0 1\par
+$topleft\par
+[1] black  red    green  blue   white  orange gold  \par
+Levels: black blue gold green orange red white\par
+$botright\par
+[1] green  red    white  black  blue   gold   orange brown \par
+Levels: black blue brown gold green orange red white\par
+| That's a job well done!\par
+  |====================================================      |  90%\par
+| Occasionally, you may need to apply a function that is not yet\par
+| defined, thus requiring you to write your own. Writing functions\par
+| in R is beyond the scope of this lesson, but let's look at a\par
+| quick example of how you might do so in the context of loop\par
+| functions.\par
+...\par
+  |=====================================================     |  92%\par
+| Pretend you are interested in only the second item from each\par
+| element of the unique_vals list that you just created. Since each\par
+| element of the unique_vals list is a vector and we're not aware\par
+| of any built-in function in R that returns the second element of\par
+| a vector, we will construct our own function.\par
+...\par
+  |=======================================================   |  94%\par
+| lapply(unique_vals, function(elem) elem[2]) will return a list\par
+| containing the second item from each element of the unique_vals\par
+| list. Note that our function takes one argument, elem, which is\par
+| just a 'dummy variable' that takes on the value of each element\par
+| of unique_vals, in turn.\par
+> lapply(unique_vals, function(elem) elem[2])\par
+$name\par
+[1] Albania\par
+194 Levels: Afghanistan Albania Algeria American-Samoa ... Zimbabwe\par
+$landmass\par
+[1] 3\par
+$zone\par
+[1] 3\par
+$area\par
+[1] 29\par
+$population\par
+[1] 3\par
+$language\par
+[1] 6\par
+$religion\par
+[1] 6\par
+$bars\par
+[1] 2\par
+$stripes\par
+[1] 0\par
+$colours\par
+[1] 3\par
+$red\par
+[1] 0\par
+$green\par
+[1] 0\par
+$blue\par
+[1] 1\par
+$gold\par
+[1] 0\par
+$white\par
+[1] 0\par
+$black\par
+[1] 0\par
+$orange\par
+[1] 1\par
+$mainhue\par
+[1] red\par
+Levels: black blue brown gold green orange red white\par
+$circles\par
+[1] 1\par
+$crosses\par
+[1] 1\par
+$saltires\par
+[1] 1\par
+$quarters\par
+[1] 1\par
+$sunstars\par
+[1] 0\par
+$crescent\par
+[1] 1\par
+$triangle\par
+[1] 1\par
+$icon\par
+[1] 0\par
+$animate\par
+[1] 1\par
+$text\par
+[1] 1\par
+$topleft\par
+[1] red\par
+Levels: black blue gold green orange red white\par
+$botright\par
+[1] red\par
+Levels: black blue brown gold green orange red white\par
+| You nailed it! Good job!\par
+  |========================================================  |  96%\par
+| The only difference between previous examples and this one is\par
+| that we are defining and using our own function right in the call\par
+| to lapply(). Our function has no name and disappears as soon as\par
+| lapply() is done using it. So-called 'anonymous functions' can be\par
+| very useful when one of R's built-in functions isn't an option.\par
+...\par
+  |========================================================= |  98%\par
+| In this lesson, you learned how to use the powerful lapply() and\par
+| sapply() functions to apply an operation over the elements of a\par
+| list. In the next lesson, we'll take a look at some close\par
+| relatives of lapply() and sapply().\par
+...\par
+  |==========================================================| 100%\par
+}
+ 
